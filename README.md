@@ -15,7 +15,7 @@ Settings includes the daily target, slot length, sound preview and volume, and t
 ## How it works
 
 - The menu bar shows today's completed slots, such as **0/4**. While a slot runs, it also shows the remaining time.
-- Click the count to open the timer. Press **Start slot** to begin; **Stop slot** discards an unfinished slot.
+- Click the count to open the timer. Press **Start** to begin; **Stop** discards an unfinished slot.
 - A completed slot plays a gentle chime and increases the count. The next slot starts only when you press Start again.
 - Defaults are **4 slots of 45 minutes**, with sound volume at **85%**. Settings lets you change these and preview the sound.
 - Settings and progress persist across app restarts and installer updates. The daily count resets at local midnight.

@@ -213,7 +213,7 @@ struct SlotPopover: View {
                         .font(.system(size: 12)).foregroundColor(.secondary)
                         .frame(height: 18)
                     Button(action: { store.isRunning ? store.stop() : store.start() }) {
-                        Label(store.isRunning ? "Stop slot" : "Start slot", systemImage: store.isRunning ? "stop.fill" : "play.fill")
+                        Label(store.isRunning ? "Stop" : "Start", systemImage: store.isRunning ? "stop.fill" : "play.fill")
                             .font(.system(size: 14, weight: .semibold))
                             .frame(maxWidth: .infinity).padding(.vertical, 9)
                     }

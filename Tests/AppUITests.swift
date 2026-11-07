@@ -40,41 +40,53 @@ enum AppUITests {
         assert(restored.state.target == 4 && restored.state.minutes == 45)
 
         var nearEnd = SlotState(now: Date())
+        nearEnd.completed = 4
+        let previousDate = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        let previousKey = SlotState.dayKey(previousDate, calendar: .current)
+        nearEnd.history[previousKey] = DailySlotProgress(day: previousKey, completed: 3, target: 4)
+        let olderDate = Calendar.current.date(byAdding: .day, value: -2, to: Date())!
+        let olderKey = SlotState.dayKey(olderDate, calendar: .current)
+        nearEnd.history[olderKey] = DailySlotProgress(day: olderKey, completed: 4, target: 4)
         nearEnd.deadline = Date().addingTimeInterval(0.5)
         nearEnd.activeSeconds = 60
         defaults.set(try JSONEncoder().encode(nearEnd), forKey: "timeSlots.state.v1")
         let finishing = SlotStore(defaults: defaults, completionSound: soundSpy)
         assert(finishing.isRunning)
         RunLoop.main.run(until: Date().addingTimeInterval(2))
-        assert(!finishing.isRunning && finishing.state.completed == 1 && finishing.justCompleted)
+        assert(!finishing.isRunning && finishing.state.completed == 5 && finishing.justCompleted)
         assert(soundSpy.volumes.count == 1 && abs(soundSpy.volumes[0] - 1) < 0.001)
+        assert(finishing.remaining == 2700 && finishing.progress == 0, "Completed slot did not reset to a full next timer")
+        assert(finishing.state.history[finishing.state.day]?.completed == 5)
         assert(realSound.finishedSuccessfully == true, "Completion did not finish playing through audio output")
         finishing.refresh()
-        assert(finishing.state.completed == 1, "Duplicate completion")
+        assert(finishing.state.completed == 5, "Duplicate completion")
         assert(soundSpy.volumes.count == 1, "Duplicate completion sound")
         finishing.setSoundVolume(0.55)
         finishing.previewSound()
         assert(soundSpy.volumes.count == 2 && abs(soundSpy.volumes[1] - 0.55) < 0.001)
-        assert(finishing.state.completed == 1, "Preview changed progress")
+        assert(finishing.state.completed == 5, "Preview changed progress")
         RunLoop.main.run(until: Date().addingTimeInterval(1.2))
         assert(realSound.finishedSuccessfully == true && !finishing.soundFailed)
         finishing.start()
         finishing.stop()
         assert(soundSpy.volumes.count == 2, "Stopping played completion audio")
         let completed = SlotStore(defaults: defaults, playSound: false)
-        assert(completed.state.completed == 1 && !completed.isRunning)
+        assert(completed.state.completed == 5 && !completed.isRunning)
         assert(abs(completed.soundVolume - 0.55) < 0.001, "Sound volume did not persist")
+        assert(completed.state.history[completed.state.day]?.completed == 5)
+        assert(completed.state.history[previousKey]?.completed == 3 && completed.state.history[previousKey]?.target == 4)
+        assert(completed.state.history[olderKey]?.completed == 4)
 
         completed.setSoundVolume(1) // Show the release default in Settings screenshots.
 
         let bell = NSSound(contentsOfFile: output + "/completion.wav", byReference: false)
         assert(bell != nil && abs(bell!.duration - 0.8) < 0.01, "Bundled completion sound is invalid")
-        for (name, appearance, settings) in [("light", NSAppearance.Name.aqua, false), ("dark", .darkAqua, false), ("settings", .aqua, true)] {
+        for (name, appearance, settings, history) in [("light", NSAppearance.Name.aqua, false, false), ("dark", .darkAqua, false, false), ("settings", .aqua, true, false), ("history", .aqua, false, true), ("history-dark", .darkAqua, false, true)] {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 324, height: 350),
                                   styleMask: [.borderless], backing: .buffered, defer: false)
             window.appearance = NSAppearance(named: appearance)
             window.backgroundColor = .windowBackgroundColor
-            let hosting = NSHostingView(rootView: SlotPopover(store: completed, initiallyShowingSettings: settings)
+            let hosting = NSHostingView(rootView: SlotPopover(store: completed, initiallyShowingSettings: settings, initiallyShowingHistory: history)
                 .background(Color(nsColor: .windowBackgroundColor))
                 .preferredColorScheme(appearance == .darkAqua ? .dark : .light))
             window.contentView = hosting
@@ -91,6 +103,6 @@ enum AppUITests {
             try data.write(to: URL(fileURLWithPath: output).appendingPathComponent("popover-\(name).png"))
             window.orderOut(nil)
         }
-        print("PASS: completion invokes real audio once, playback finishes, preview plays without counting, volume persists, stop is silent, timer behavior, light/dark/settings UI")
+        print("PASS: completion invokes real audio once, playback finishes, preview plays without counting, volume persists, stop is silent, unlimited extra slots, next timer reset, persisted history, light/dark/settings/history UI")
     }
 }

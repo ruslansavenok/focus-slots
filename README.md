@@ -10,17 +10,22 @@ A simple native macOS menu bar app for manually started focus sessions. Set a da
 
 Settings includes the daily target, slot length, sound preview and volume, and the running version.
 
-<img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.6" width="324">
+| Settings | History |
+| --- | --- |
+| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.7" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
 
 ## How it works
 
 - The menu bar shows today's completed slots, such as **0/4**. While a slot runs, it also shows the remaining time.
 - Click the count to open the timer. Press **Start** to begin and close the dropdown; the countdown stays visible in the menu bar. **Stop** discards an unfinished slot.
-- A completed slot plays a gentle chime and increases the count. The next slot starts only when you press Start again.
+- A completed slot plays a gentle chime and increases the count. The timer returns to the full slot length, ready for another manual start. You can continue beyond the target, such as **5/4** after five completed slots.
 - Defaults are **4 slots of 45 minutes**, with sound volume at **100%**. Settings lets you change these and preview the sound.
-- Settings and progress persist across app restarts and installer updates. The daily count resets at local midnight.
+- The **History** icon, immediately left of Settings, opens a newest-first list such as **Nov 7 — 3/4**. Each date keeps its own daily target and includes extra slots.
+- Settings, progress, and history persist across app restarts and installer updates. The daily count resets at local midnight while its result remains in History.
 
 A running timer includes time spent asleep or while the app is closed. An overdue timer completes on wake or relaunch. Slots that cross midnight count on their finish day; a slot that finished on a previous day is not added to today's count. Changing the slot length affects the next timer. You can continue beyond your daily target.
+
+History begins with the saved day available when upgrading to 1.0.7 and continues from then on. Older versions discarded earlier daily totals, so those cannot be reconstructed. Only dates recorded by the app are listed; days skipped while the app is closed are not filled in.
 
 ## Requirements
 
@@ -53,10 +58,10 @@ bash build.sh
 
 The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a macOS installer.
 
-For version 1.0.6, the outputs are:
+For version 1.0.7, the outputs are:
 
 - App: `build/Focus Slots.app`
-- Installer: `dist/FocusSlots-1.0.6.pkg`
+- Installer: `dist/FocusSlots-1.0.7.pkg`
 
 To try the app without installing it:
 
@@ -72,7 +77,7 @@ Quit any already-running copy before opening another build. Build files and inst
 2. Open the installer and follow the macOS installation prompts:
 
    ```bash
-   open dist/FocusSlots-1.0.6.pkg
+   open dist/FocusSlots-1.0.7.pkg
    ```
 
 3. Launch **Focus Slots** from Applications or Spotlight:
@@ -99,7 +104,7 @@ After building, run the native integration checks in your Mac's logged-in deskto
 bash test-ui.sh
 ```
 
-These checks exercise saved settings and progress, start/stop, live completion, real audio playback, sound preview, and volume persistence. The suite uses isolated preferences, briefly plays the chime twice, and renders light, dark, and Settings screenshots into `build/`.
+These checks exercise saved settings and progress, start/stop, live completion, real audio playback, sound preview, and volume persistence. The suite uses isolated preferences, briefly plays the chime twice, and renders light, dark, Settings, and History screenshots into `build/`.
 
 The README screenshots live separately in `screenshots/`. Refresh them after reviewing the rendered images:
 
@@ -107,6 +112,7 @@ The README screenshots live separately in `screenshots/`. Refresh them after rev
 cp build/popover-light.png screenshots/timer-light.png
 cp build/popover-dark.png screenshots/timer-dark.png
 cp build/popover-settings.png screenshots/settings.png
+cp build/popover-history.png screenshots/history.png
 ```
 
 ## Project layout

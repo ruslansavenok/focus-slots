@@ -52,7 +52,7 @@ final class SlotStore: ObservableObject {
     var isRunning: Bool { state.deadline != nil }
     var remaining: Int { state.remaining(at: now) }
     var progress: Double {
-        guard isRunning else { return justCompleted ? 1 : 0 }
+        guard isRunning else { return 0 }
         return min(1, max(0, 1 - Double(remaining) / (state.activeSeconds ?? Double(state.minutes * 60))))
     }
 
@@ -93,8 +93,10 @@ final class SlotStore: ObservableObject {
     }
 
     func saveSettings(target: Int, minutes: Int) {
+        refresh()
         state.target = min(99, max(1, target))
         state.minutes = min(240, max(1, minutes))
+        state.reconcile(now: now)
         justCompleted = false
         persist()
         didChange?()
@@ -130,16 +132,18 @@ final class SlotStore: ObservableObject {
 struct SlotPopover: View {
     @ObservedObject var store: SlotStore
     @State private var settings = false
+    @State private var history = false
     @State private var targetInput: String
     @State private var minutesInput: String
     @State private var soundVolumeInput: Double
     private let onStart: () -> Void
     private let accent = Color(red: 0.22, green: 0.49, blue: 0.40)
 
-    init(store: SlotStore, initiallyShowingSettings: Bool = false, onStart: @escaping () -> Void = {}) {
+    init(store: SlotStore, initiallyShowingSettings: Bool = false, initiallyShowingHistory: Bool = false, onStart: @escaping () -> Void = {}) {
         self.store = store
         self.onStart = onStart
         _settings = State(initialValue: initiallyShowingSettings)
+        _history = State(initialValue: initiallyShowingHistory)
         _targetInput = State(initialValue: String(store.state.target))
         _minutesInput = State(initialValue: String(store.state.minutes))
         _soundVolumeInput = State(initialValue: store.soundVolume)
@@ -154,9 +158,17 @@ struct SlotPopover: View {
         VStack(spacing: 0) {
             HStack {
                 Image(systemName: "circle.dotted.circle.fill").foregroundColor(accent)
-                Text(settings ? "Settings" : "Focus Slots").font(.system(size: 14, weight: .semibold))
+                Text(settings ? "Settings" : (history ? "History" : "Focus Slots")).font(.system(size: 14, weight: .semibold))
                 Spacer()
-                if !settings {
+                if !settings && !history {
+                    Button {
+                        store.refresh()
+                        history = true
+                    } label: { Image(systemName: "clock.arrow.circlepath") }
+                    .buttonStyle(.plain)
+                    .help("History")
+                    .accessibilityLabel("History")
+                    .padding(.trailing, 8)
                     Button {
                         targetInput = String(store.state.target)
                         minutesInput = String(store.state.minutes)
@@ -166,6 +178,11 @@ struct SlotPopover: View {
                     .buttonStyle(.plain)
                     .help("Settings")
                     .accessibilityLabel("Settings")
+                } else if history {
+                    Button("Back") { history = false }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.primary)
+                        .help("Back to timer")
                 }
             }
             .padding(.bottom, 22)
@@ -208,11 +225,34 @@ struct SlotPopover: View {
                         .disabled(!validSettings)
                     }
                 }
+            } else if history {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Completed slots / daily target")
+                        .font(.system(size: 12)).foregroundColor(.secondary)
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(store.state.historyEntries) { entry in
+                                HStack {
+                                    Text(entry.dateLabel(relativeTo: store.now))
+                                    Spacer()
+                                    Text("\(entry.completed)/\(entry.target)")
+                                        .monospacedDigit()
+                                        .fontWeight(entry.completed >= entry.target ? .semibold : .regular)
+                                }
+                                .font(.system(size: 13))
+                                .padding(.vertical, 12)
+                                Divider()
+                            }
+                        }
+                        .padding(.trailing, 4)
+                    }
+                    .frame(height: min(280, CGFloat(max(1, store.state.historyEntries.count)) * 42))
+                }
             } else {
                 VStack(spacing: 12) {
                     Text("\(store.state.completed) of \(store.state.target) slots today")
                         .font(.system(size: 12, weight: .medium)).foregroundColor(.secondary)
-                    Text(store.justCompleted && !store.isRunning ? "00:00" : SlotState.clock(store.remaining))
+                    Text(SlotState.clock(store.remaining))
                         .font(.system(size: 51, weight: .light, design: .rounded))
                         .monospacedDigit()
                         .accessibilityLabel("Time remaining")
@@ -244,7 +284,7 @@ struct SlotPopover: View {
 
             Divider().padding(.top, 20).padding(.bottom, 12)
             HStack {
-                Text(settings ? AppVersion.display : "Resets daily at midnight")
+                Text(settings ? AppVersion.display : (history ? "Saved on this Mac" : "Resets daily at midnight"))
                     .font(.system(size: 10)).foregroundColor(.secondary)
                 Spacer()
                 Button("Quit") { NSApplication.shared.terminate(nil) }
@@ -259,7 +299,7 @@ struct SlotPopover: View {
 
     private var status: String {
         if store.isRunning { return "One slot. One thing at a time." }
-        if store.justCompleted { return "Slot complete. Start again when ready." }
+        if store.justCompleted { return "Slot complete. Ready for another." }
         if store.state.completed >= store.state.target { return "Daily target reached. Keep going if you like." }
         return "Ready when you are."
     }

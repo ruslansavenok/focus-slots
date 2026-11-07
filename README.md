@@ -1,4 +1,4 @@
-# Time Slots
+# Focus Slots
 
 A simple native macOS menu bar app for manually started focus sessions. Set a daily goal and a slot length, start a timer, and hear a short chime when it finishes. No automatic breaks, accounts, or network access.
 
@@ -6,11 +6,11 @@ A simple native macOS menu bar app for manually started focus sessions. Set a da
 
 | Light appearance | Dark appearance |
 | --- | --- |
-| <img src="screenshots/timer-light.png" alt="Time Slots timer in light appearance" width="300"> | <img src="screenshots/timer-dark.png" alt="Time Slots timer in dark appearance" width="300"> |
+| <img src="screenshots/timer-light.png" alt="Focus Slots timer in light appearance" width="300"> | <img src="screenshots/timer-dark.png" alt="Focus Slots timer in dark appearance" width="300"> |
 
 Settings includes the daily target, slot length, sound preview and volume, and the running version.
 
-<img src="screenshots/settings.png" alt="Time Slots settings with sound controls and version 1.0.4" width="324">
+<img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.5" width="324">
 
 ## How it works
 
@@ -41,8 +41,8 @@ Clone the project into a new folder:
 ```bash
 mkdir -p ~/Projects
 cd ~/Projects
-git clone https://github.com/ruslansavenok/time-slots.git TimeSlots
-cd TimeSlots
+git clone https://github.com/ruslansavenok/focus-slots.git FocusSlots
+cd FocusSlots
 ```
 
 From the project folder, run:
@@ -53,41 +53,43 @@ bash build.sh
 
 The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a macOS installer.
 
-For version 1.0.4, the outputs are:
+For version 1.0.5, the outputs are:
 
-- App: `build/Time Slots.app`
-- Installer: `dist/TimeSlots-1.0.4.pkg`
+- App: `build/Focus Slots.app`
+- Installer: `dist/FocusSlots-1.0.5.pkg`
 
 To try the app without installing it:
 
 ```bash
-open "build/Time Slots.app"
+open "build/Focus Slots.app"
 ```
 
 Quit any already-running copy before opening another build. Build files and installers are generated locally and excluded from Git.
 
 ## Install or update
 
-1. If Time Slots is running, click its menu bar count and choose **Quit**.
+1. If Focus Slots (or the previous Time Slots app) is running, click its menu bar count and choose **Quit**.
 2. Open the installer and follow the macOS installation prompts:
 
    ```bash
-   open dist/TimeSlots-1.0.4.pkg
+   open dist/FocusSlots-1.0.5.pkg
    ```
 
-3. Launch **Time Slots** from Applications or Spotlight:
+3. Launch **Focus Slots** from Applications or Spotlight:
 
    ```bash
-   open "/Applications/Time Slots.app"
+   open "/Applications/Focus Slots.app"
    ```
 
 4. Look for **0/4** (or your saved progress) in the menu bar. There is no Dock icon. Open Settings to confirm the running version and use **Test sound** to check the chime.
+
+When upgrading from Time Slots, the installer renames the existing app to Focus Slots before replacing it. The app retains the same internal identity and preference keys, so progress and settings carry over.
 
 An update replaces the app while keeping its saved progress, timer, and settings. Reopen it after updating so the new code runs. Version 1.0.4 sets completion sound volume to 100% once on first launch, including upgrades. Later volume adjustments are saved normally. Sound follows your Mac's selected output, volume, and mute setting.
 
 The build uses an ad-hoc app signature. Developer ID signing and Apple notarization for distributing prebuilt apps are not configured; the instructions above build the app locally on your Mac.
 
-To uninstall, quit the app and move **Time Slots** from Applications to Trash.
+To uninstall, quit the app and move **Focus Slots** from Applications to Trash.
 
 ## Tests and screenshot generation
 
@@ -113,7 +115,8 @@ cp build/popover-settings.png screenshots/settings.png
 | --- | --- |
 | `Sources/` | Timer state, audio playback, menu bar app, and Settings UI |
 | `Resources/make-assets.swift` | Generates the icon and completion chime locally |
-| `Tests/` | Timer behavior and native integration checks |
+| `Tests/` | Timer behavior, installer migration, and native integration checks |
+| `Installer/preinstall` | Renames a matching legacy app during installation |
 | `screenshots/` | Screenshots displayed in this README |
 | `build.sh` | Builds, signs, checks, and packages the app |
 | `test-ui.sh` | Runs native checks and renders screenshots |

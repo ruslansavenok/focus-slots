@@ -13,6 +13,7 @@ final class SlotStore: ObservableObject {
     private let sound: CompletionSoundPlaying?
     private var activity: NSObjectProtocol?
     private let defaults: UserDefaults
+    // Keep the original preference keys across the Focus Slots rename.
     private let storageKey = "timeSlots.state.v1"
 
     init(defaults: UserDefaults = .standard, playSound: Bool = true, completionSound: CompletionSoundPlaying? = nil) {
@@ -151,7 +152,7 @@ struct SlotPopover: View {
         VStack(spacing: 0) {
             HStack {
                 Image(systemName: "circle.dotted.circle.fill").foregroundColor(accent)
-                Text(settings ? "Settings" : "Time Slots").font(.system(size: 14, weight: .semibold))
+                Text(settings ? "Settings" : "Focus Slots").font(.system(size: 14, weight: .semibold))
                 Spacer()
                 if !settings {
                     Button {
@@ -239,7 +240,7 @@ struct SlotPopover: View {
                 Spacer()
                 Button("Quit") { NSApplication.shared.terminate(nil) }
                     .font(.system(size: 11)).buttonStyle(.plain).foregroundColor(.secondary)
-                    .help("Quit Time Slots; a running slot resumes on launch")
+                    .help("Quit Focus Slots; a running slot resumes on launch")
             }
         }
         .padding(22)
@@ -310,10 +311,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let title = store.isRunning ? "\(counter)  ·  \(SlotState.clock(store.remaining))" : counter
         if title != lastTitle {
             statusItem.button?.title = title
-            statusItem.button?.setAccessibilityLabel("Time Slots: \(store.state.completed) of \(store.state.target) completed" + (store.isRunning ? ", \(SlotState.clock(store.remaining)) remaining" : ""))
+            statusItem.button?.setAccessibilityLabel("Focus Slots: \(store.state.completed) of \(store.state.target) completed" + (store.isRunning ? ", \(SlotState.clock(store.remaining)) remaining" : ""))
             lastTitle = title
         }
-        statusItem.button?.toolTip = store.isRunning ? "Time Slots — \(SlotState.clock(store.remaining)) remaining" : "Time Slots — \(counter) today"
+        statusItem.button?.toolTip = store.isRunning ? "Focus Slots — \(SlotState.clock(store.remaining)) remaining" : "Focus Slots — \(counter) today"
     }
 
     @objc private func togglePopover() {
@@ -330,7 +331,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 #if !TIME_SLOTS_UI_TEST
 @main
-enum TimeSlotsApp {
+enum FocusSlotsApp {
     @MainActor static func main() {
         let app = NSApplication.shared
         let delegate = AppDelegate()

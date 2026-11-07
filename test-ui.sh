@@ -18,5 +18,5 @@ cat > "$TEST_APP/Contents/Info.plist" <<'PLIST'
 <key>LSUIElement</key><true/>
 </dict></plist>
 PLIST
-swiftc "${SWIFT_FLAGS[@]}" -target "$(uname -m)-apple-macosx13.0" -D TIME_SLOTS_UI_TEST Sources/SlotState.swift Sources/CompletionSound.swift Sources/TimeSlots.swift "$BUILD/AppVersion.swift" Tests/AppUITests.swift -o "$TEST_APP/Contents/MacOS/AppUITests" -framework AppKit -framework SwiftUI -framework AVFoundation
+swiftc "${SWIFT_FLAGS[@]}" -target "$(uname -m)-apple-macosx13.0" -D TIME_SLOTS_UI_TEST Sources/SlotState.swift Sources/CompletionSound.swift Sources/FocusSlots.swift "$BUILD/AppVersion.swift" Tests/AppUITests.swift -o "$TEST_APP/Contents/MacOS/AppUITests" -framework AppKit -framework SwiftUI -framework AVFoundation
 "$TEST_APP/Contents/MacOS/AppUITests" "$BUILD"

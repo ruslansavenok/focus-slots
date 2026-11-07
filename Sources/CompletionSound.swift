@@ -24,7 +24,7 @@ final class CompletionSound: NSObject, CompletionSoundPlaying, AVAudioPlayerDele
         player?.stop()
         finishedSuccessfully = nil
         guard let url else {
-            NSLog("Time Slots: completion sound is missing")
+            NSLog("Focus Slots: completion sound is missing")
             return false
         }
         do {
@@ -33,12 +33,12 @@ final class CompletionSound: NSObject, CompletionSoundPlaying, AVAudioPlayerDele
             next.delegate = self
             next.volume = min(1, max(0, volume))
             guard next.prepareToPlay(), next.play() else {
-                NSLog("Time Slots: audio playback could not start")
+                NSLog("Focus Slots: audio playback could not start")
                 return false
             }
             return true
         } catch {
-            NSLog("Time Slots: audio playback failed: %@", error.localizedDescription)
+            NSLog("Focus Slots: audio playback failed: %@", error.localizedDescription)
             return false
         }
     }

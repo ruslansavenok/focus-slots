@@ -133,10 +133,12 @@ struct SlotPopover: View {
     @State private var targetInput: String
     @State private var minutesInput: String
     @State private var soundVolumeInput: Double
+    private let onStart: () -> Void
     private let accent = Color(red: 0.22, green: 0.49, blue: 0.40)
 
-    init(store: SlotStore, initiallyShowingSettings: Bool = false) {
+    init(store: SlotStore, initiallyShowingSettings: Bool = false, onStart: @escaping () -> Void = {}) {
         self.store = store
+        self.onStart = onStart
         _settings = State(initialValue: initiallyShowingSettings)
         _targetInput = State(initialValue: String(store.state.target))
         _minutesInput = State(initialValue: String(store.state.minutes))
@@ -221,7 +223,14 @@ struct SlotPopover: View {
                     Text(status)
                         .font(.system(size: 12)).foregroundColor(.secondary)
                         .frame(height: 18)
-                    Button(action: { store.isRunning ? store.stop() : store.start() }) {
+                    Button {
+                        if store.isRunning {
+                            store.stop()
+                        } else {
+                            store.start()
+                            onStart()
+                        }
+                    } label: {
                         Label(store.isRunning ? "Stop" : "Start", systemImage: store.isRunning ? "stop.fill" : "play.fill")
                             .font(.system(size: 14, weight: .semibold))
                             .frame(maxWidth: .infinity).padding(.vertical, 9)
@@ -301,7 +310,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         popover.behavior = .transient
         popover.animates = true
-        popover.contentViewController = NSHostingController(rootView: SlotPopover(store: store))
+        popover.contentViewController = NSHostingController(rootView: SlotPopover(store: store, onStart: { [weak self] in
+            self?.popover.performClose(nil)
+        }))
         store.didChange = { [weak self] in self?.updateTitle() }
         updateTitle()
     }

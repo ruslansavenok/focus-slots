@@ -10,12 +10,12 @@ A simple native macOS menu bar app for manually started focus sessions. Set a da
 
 Settings includes the daily target, slot length, sound preview and volume, and the running version.
 
-<img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.5" width="324">
+<img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.6" width="324">
 
 ## How it works
 
 - The menu bar shows today's completed slots, such as **0/4**. While a slot runs, it also shows the remaining time.
-- Click the count to open the timer. Press **Start** to begin; **Stop** discards an unfinished slot.
+- Click the count to open the timer. Press **Start** to begin and close the dropdown; the countdown stays visible in the menu bar. **Stop** discards an unfinished slot.
 - A completed slot plays a gentle chime and increases the count. The next slot starts only when you press Start again.
 - Defaults are **4 slots of 45 minutes**, with sound volume at **100%**. Settings lets you change these and preview the sound.
 - Settings and progress persist across app restarts and installer updates. The daily count resets at local midnight.
@@ -53,10 +53,10 @@ bash build.sh
 
 The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a macOS installer.
 
-For version 1.0.5, the outputs are:
+For version 1.0.6, the outputs are:
 
 - App: `build/Focus Slots.app`
-- Installer: `dist/FocusSlots-1.0.5.pkg`
+- Installer: `dist/FocusSlots-1.0.6.pkg`
 
 To try the app without installing it:
 
@@ -72,7 +72,7 @@ Quit any already-running copy before opening another build. Build files and inst
 2. Open the installer and follow the macOS installation prompts:
 
    ```bash
-   open dist/FocusSlots-1.0.5.pkg
+   open dist/FocusSlots-1.0.6.pkg
    ```
 
 3. Launch **Focus Slots** from Applications or Spotlight:

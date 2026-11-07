@@ -10,14 +10,14 @@ A simple native macOS menu bar app for manually started focus sessions. Set a da
 
 Settings includes the daily target, slot length, sound preview and volume, and the running version.
 
-<img src="screenshots/settings.png" alt="Time Slots settings with sound controls and version 1.0.3" width="324">
+<img src="screenshots/settings.png" alt="Time Slots settings with sound controls and version 1.0.4" width="324">
 
 ## How it works
 
 - The menu bar shows today's completed slots, such as **0/4**. While a slot runs, it also shows the remaining time.
 - Click the count to open the timer. Press **Start** to begin; **Stop** discards an unfinished slot.
 - A completed slot plays a gentle chime and increases the count. The next slot starts only when you press Start again.
-- Defaults are **4 slots of 45 minutes**, with sound volume at **85%**. Settings lets you change these and preview the sound.
+- Defaults are **4 slots of 45 minutes**, with sound volume at **100%**. Settings lets you change these and preview the sound.
 - Settings and progress persist across app restarts and installer updates. The daily count resets at local midnight.
 
 A running timer includes time spent asleep or while the app is closed. An overdue timer completes on wake or relaunch. Slots that cross midnight count on their finish day; a slot that finished on a previous day is not added to today's count. Changing the slot length affects the next timer. You can continue beyond your daily target.
@@ -53,10 +53,10 @@ bash build.sh
 
 The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a macOS installer.
 
-For version 1.0.3, the outputs are:
+For version 1.0.4, the outputs are:
 
 - App: `build/Time Slots.app`
-- Installer: `dist/TimeSlots-1.0.3.pkg`
+- Installer: `dist/TimeSlots-1.0.4.pkg`
 
 To try the app without installing it:
 
@@ -72,7 +72,7 @@ Quit any already-running copy before opening another build. Build files and inst
 2. Open the installer and follow the macOS installation prompts:
 
    ```bash
-   open dist/TimeSlots-1.0.3.pkg
+   open dist/TimeSlots-1.0.4.pkg
    ```
 
 3. Launch **Time Slots** from Applications or Spotlight:
@@ -83,7 +83,7 @@ Quit any already-running copy before opening another build. Build files and inst
 
 4. Look for **0/4** (or your saved progress) in the menu bar. There is no Dock icon. Open Settings to confirm the running version and use **Test sound** to check the chime.
 
-An update replaces the app while keeping its saved progress, timer, and settings. Reopen it after updating so the new code runs. Saved volume preferences are retained. Sound follows your Mac's selected output, volume, and mute setting.
+An update replaces the app while keeping its saved progress, timer, and settings. Reopen it after updating so the new code runs. Version 1.0.4 sets completion sound volume to 100% once on first launch, including upgrades. Later volume adjustments are saved normally. Sound follows your Mac's selected output, volume, and mute setting.
 
 The build uses an ad-hoc app signature. Developer ID signing and Apple notarization for distributing prebuilt apps are not configured; the instructions above build the app locally on your Mac.
 

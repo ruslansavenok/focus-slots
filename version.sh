@@ -1,6 +1,6 @@
 # Single release definition for the app binary, bundle metadata, and installer.
-APP_VERSION="1.0.3"
-APP_BUILD="4"
+APP_VERSION="1.0.4"
+APP_BUILD="5"
 cat > "$BUILD/AppVersion.swift" <<SWIFT
 enum AppVersion {
     static let version = "$APP_VERSION"

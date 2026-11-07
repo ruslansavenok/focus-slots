@@ -25,7 +25,10 @@ enum AppUITests {
         let output = CommandLine.arguments[1]
         let realSound = CompletionSound()
         let soundSpy = SoundSpy(real: realSound)
+        // Upgrade from an older saved volume; completion should use 100%.
+        defaults.set(0.7, forKey: "timeSlots.soundVolume")
         let store = SlotStore(defaults: defaults, playSound: false)
+        assert(store.soundVolume == 1, "Upgrade did not apply the new 100% volume")
         store.saveSettings(target: 6, minutes: 25)
         store.start()
         assert(store.isRunning && store.remaining == 1500)
@@ -44,7 +47,7 @@ enum AppUITests {
         assert(finishing.isRunning)
         RunLoop.main.run(until: Date().addingTimeInterval(2))
         assert(!finishing.isRunning && finishing.state.completed == 1 && finishing.justCompleted)
-        assert(soundSpy.volumes.count == 1 && abs(soundSpy.volumes[0] - 0.85) < 0.001)
+        assert(soundSpy.volumes.count == 1 && abs(soundSpy.volumes[0] - 1) < 0.001)
         assert(realSound.finishedSuccessfully == true, "Completion did not finish playing through audio output")
         finishing.refresh()
         assert(finishing.state.completed == 1, "Duplicate completion")
@@ -61,6 +64,8 @@ enum AppUITests {
         let completed = SlotStore(defaults: defaults, playSound: false)
         assert(completed.state.completed == 1 && !completed.isRunning)
         assert(abs(completed.soundVolume - 0.55) < 0.001, "Sound volume did not persist")
+
+        completed.setSoundVolume(1) // Show the release default in Settings screenshots.
 
         let bell = NSSound(contentsOfFile: output + "/completion.wav", byReference: false)
         assert(bell != nil && abs(bell!.duration - 0.8) < 0.01, "Bundled completion sound is invalid")

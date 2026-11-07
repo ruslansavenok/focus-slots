@@ -17,8 +17,16 @@ final class SlotStore: ObservableObject {
 
     init(defaults: UserDefaults = .standard, playSound: Bool = true, completionSound: CompletionSoundPlaying? = nil) {
         self.defaults = defaults
-        soundVolume = defaults.object(forKey: "timeSlots.soundVolume") == nil
-            ? 0.85 : min(1, max(0.1, defaults.double(forKey: "timeSlots.soundVolume")))
+        // Apply the new 100% default once, including upgrades with a saved volume.
+        // Later user adjustments must survive subsequent launches.
+        if defaults.integer(forKey: "timeSlots.soundVolumeDefaultsVersion") < 2 {
+            soundVolume = 1
+            defaults.set(1.0, forKey: "timeSlots.soundVolume")
+            defaults.set(2, forKey: "timeSlots.soundVolumeDefaultsVersion")
+        } else {
+            soundVolume = defaults.object(forKey: "timeSlots.soundVolume") == nil
+                ? 1 : min(1, max(0.1, defaults.double(forKey: "timeSlots.soundVolume")))
+        }
         sound = playSound ? (completionSound ?? CompletionSound()) : nil
         if let data = defaults.data(forKey: storageKey),
            let saved = try? JSONDecoder().decode(SlotState.self, from: data) {

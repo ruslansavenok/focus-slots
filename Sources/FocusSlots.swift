@@ -164,7 +164,7 @@ struct SlotPopover: View {
                     Button {
                         store.refresh()
                         history = true
-                    } label: { Image(systemName: "clock.arrow.circlepath") }
+                    } label: { Image(systemName: "list.bullet.rectangle") }
                     .buttonStyle(.plain)
                     .help("History")
                     .accessibilityLabel("History")

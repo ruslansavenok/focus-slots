@@ -12,7 +12,7 @@ Settings includes the daily target, slot length, sound preview and volume, and t
 
 | Settings | History |
 | --- | --- |
-| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.7" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
+| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.8" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
 
 ## How it works
 
@@ -58,10 +58,10 @@ bash build.sh
 
 The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a macOS installer.
 
-For version 1.0.7, the outputs are:
+For version 1.0.8, the outputs are:
 
 - App: `build/Focus Slots.app`
-- Installer: `dist/FocusSlots-1.0.7.pkg`
+- Installer: `dist/FocusSlots-1.0.8.pkg`
 
 To try the app without installing it:
 
@@ -77,7 +77,7 @@ Quit any already-running copy before opening another build. Build files and inst
 2. Open the installer and follow the macOS installation prompts:
 
    ```bash
-   open dist/FocusSlots-1.0.7.pkg
+   open dist/FocusSlots-1.0.8.pkg
    ```
 
 3. Launch **Focus Slots** from Applications or Spotlight:

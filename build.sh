@@ -7,8 +7,6 @@ APP="$BUILD/Focus Slots.app"
 mkdir -p "$BUILD" "$TASK_ROOT/dist"
 source "$TASK_ROOT/toolchain.sh"
 source "$TASK_ROOT/version.sh"
-echo "Testing installer rename migration…"
-bash Tests/InstallerMigrationTests.sh
 echo "Testing timer behavior…"
 swiftc "${SWIFT_FLAGS[@]}" Sources/SlotState.swift Tests/SlotStateTests.swift -o "$BUILD/SlotStateTests"
 "$BUILD/SlotStateTests"
@@ -47,16 +45,14 @@ lipo -create "$BUILD/FocusSlots-x86_64" "$BUILD/FocusSlots-arm64" -output "$APP/
 codesign --force --sign - --timestamp=none "$APP"
 codesign --verify --deep --strict "$APP"
 plutil -lint "$APP/Contents/Info.plist"
-echo "Packaging installer…"
-# Always stage into a fresh directory so a renamed app cannot leave an old
-# app bundle in the installer payload.
-PACKAGE_ROOT="$(mktemp -d "$BUILD/package-root.XXXXXX")"
-trap 'rm -rf "$PACKAGE_ROOT"' EXIT
-ditto "$APP" "$PACKAGE_ROOT/Focus Slots.app"
-pkgbuild --analyze --root "$PACKAGE_ROOT" "$BUILD/components.plist"
-/usr/libexec/PlistBuddy -c 'Set :0:BundleIsRelocatable false' "$BUILD/components.plist"
-pkgbuild --root "$PACKAGE_ROOT" --component-plist "$BUILD/components.plist" \
-    --scripts "$TASK_ROOT/Installer" \
-    --identifier local.timeslots.installer --version "$APP_VERSION" \
-    --install-location /Applications "$TASK_ROOT/dist/FocusSlots-$APP_VERSION.pkg"
-echo "Built: $TASK_ROOT/dist/FocusSlots-$APP_VERSION.pkg"
+echo "Creating drag-to-Applications disk image…"
+DMG_ROOT="$(mktemp -d "$BUILD/dmg-root.XXXXXX")"
+chmod 755 "$DMG_ROOT"
+trap 'rm -rf "$DMG_ROOT"' EXIT
+ditto "$APP" "$DMG_ROOT/Focus Slots.app"
+ln -s /Applications "$DMG_ROOT/Applications"
+DMG="$TASK_ROOT/dist/FocusSlots-$APP_VERSION.dmg"
+hdiutil create -volname "Focus Slots" -srcfolder "$DMG_ROOT" \
+    -fs HFS+ -format UDZO -ov "$DMG"
+bash Tests/DMGTests.sh "$DMG" "$APP_VERSION"
+echo "Built: $DMG"

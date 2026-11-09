@@ -12,7 +12,7 @@ Settings includes the daily target, slot length, sound preview and volume, and t
 
 | Settings | History |
 | --- | --- |
-| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.8" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
+| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.9" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
 
 ## How it works
 
@@ -21,7 +21,7 @@ Settings includes the daily target, slot length, sound preview and volume, and t
 - A completed slot plays a gentle chime and increases the count. The timer returns to the full slot length, ready for another manual start. You can continue beyond the target, such as **5/4** after five completed slots.
 - Defaults are **4 slots of 45 minutes**, with sound volume at **100%**. Settings lets you change these and preview the sound.
 - The **History** icon, immediately left of Settings, opens a newest-first list such as **Nov 7 — 3/4**. Each date keeps its own daily target and includes extra slots.
-- Settings, progress, and history persist across app restarts and installer updates. The daily count resets at local midnight while its result remains in History.
+- Settings, progress, and history persist across app restarts and app updates. The daily count resets at local midnight while its result remains in History.
 
 A running timer includes time spent asleep or while the app is closed. An overdue timer completes on wake or relaunch. Slots that cross midnight count on their finish day; a slot that finished on a previous day is not added to today's count. Changing the slot length affects the next timer. You can continue beyond your daily target.
 
@@ -56,12 +56,12 @@ From the project folder, run:
 bash build.sh
 ```
 
-The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a macOS installer.
+The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a compressed drag-to-Applications disk image. It then mounts the image and checks the copied app, its signature, version, and both CPU architectures.
 
-For version 1.0.8, the outputs are:
+For version 1.0.9, the outputs are:
 
 - App: `build/Focus Slots.app`
-- Installer: `dist/FocusSlots-1.0.8.pkg`
+- Disk image: `dist/FocusSlots-1.0.9.dmg`
 
 To try the app without installing it:
 
@@ -69,26 +69,29 @@ To try the app without installing it:
 open "build/Focus Slots.app"
 ```
 
-Quit any already-running copy before opening another build. Build files and installers are generated locally and excluded from Git.
+Quit any already-running copy before opening another build. Build files and disk images are generated locally and excluded from Git.
 
 ## Install or update
 
 1. If Focus Slots (or the previous Time Slots app) is running, click its menu bar count and choose **Quit**.
-2. Open the installer and follow the macOS installation prompts:
+2. Open the disk image:
 
    ```bash
-   open dist/FocusSlots-1.0.8.pkg
+   open dist/FocusSlots-1.0.9.dmg
    ```
 
-3. Launch **Focus Slots** from Applications or Spotlight:
+3. Drag **Focus Slots.app** onto the **Applications** shortcut in the mounted image. When updating an existing copy, choose **Replace**.
+4. Eject the **Focus Slots** disk image, then launch **Focus Slots** from Applications or Spotlight:
 
    ```bash
    open "/Applications/Focus Slots.app"
    ```
 
-4. Look for **0/4** (or your saved progress) in the menu bar. There is no Dock icon. Open Settings to confirm the running version and use **Test sound** to check the chime.
+5. Look for **0/4** (or your saved progress) in the menu bar. There is no Dock icon. Open Settings to confirm the running version and use **Test sound** to check the chime.
 
-When upgrading from Time Slots, the installer renames the existing app to Focus Slots before replacing it. The app retains the same internal identity and preference keys, so progress and settings carry over.
+The DMG installs by copying the app. It does not run an installer package or installation scripts. Your Mac or organisation may still require permission to write to Applications or run the app.
+
+If upgrading from the old **Time Slots** name, quit it and move **Time Slots.app** from Applications to Trash before copying **Focus Slots.app**. The app retains the original internal identity and preference keys, so removing the old app bundle does not erase saved progress, settings, or history.
 
 An update replaces the app while keeping its saved progress, timer, and settings. Reopen it after updating so the new code runs. Version 1.0.4 sets completion sound volume to 100% once on first launch, including upgrades. Later volume adjustments are saved normally. Sound follows your Mac's selected output, volume, and mute setting.
 
@@ -121,11 +124,11 @@ cp build/popover-history.png screenshots/history.png
 | --- | --- |
 | `Sources/` | Timer state, audio playback, menu bar app, and Settings UI |
 | `Resources/make-assets.swift` | Generates the icon and completion chime locally |
-| `Tests/` | Timer behavior, installer migration, and native integration checks |
-| `Installer/preinstall` | Renames a matching legacy app during installation |
+| `Tests/` | Timer behavior, DMG copy-install verification, and native integration checks |
 | `screenshots/` | Screenshots displayed in this README |
-| `build.sh` | Builds, signs, checks, and packages the app |
+| `build.sh` | Builds, signs, and checks the app, then creates and verifies the DMG |
 | `test-ui.sh` | Runs native checks and renders screenshots |
+| `Tests/DMGTests.sh` | Mounts the DMG and verifies a copy of its app |
 | `version.sh` | Defines the release version and internal build number |
 | `toolchain.sh` | Configures the SDK and project-local compiler cache |
 

@@ -2,18 +2,30 @@
 set -euo pipefail
 TASK_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$TASK_ROOT"
+case "${1:-}" in
+    '') ARCHS=("$(uname -m)") ;;
+    --universal) ARCHS=(x86_64 arm64) ;;
+    --help|-h) echo 'Usage: bash build.sh [--universal]'; exit 0 ;;
+    *) echo 'Usage: bash build.sh [--universal]' >&2; exit 1 ;;
+esac
+if [ "$#" -gt 1 ]; then
+    echo 'Usage: bash build.sh [--universal]' >&2
+    exit 1
+fi
 BUILD="$TASK_ROOT/build"
 APP="$BUILD/Focus Slots.app"
-mkdir -p "$BUILD" "$TASK_ROOT/dist"
+mkdir -p "$BUILD"
 source "$TASK_ROOT/toolchain.sh"
 source "$TASK_ROOT/version.sh"
-echo "Testing timer behavior…"
-swiftc "${SWIFT_FLAGS[@]}" Sources/SlotState.swift Tests/SlotStateTests.swift -o "$BUILD/SlotStateTests"
+echo 'Testing timer behavior...'
+"$SWIFT_COMPILER" "${SWIFT_FLAGS[@]}" Sources/SlotState.swift Tests/SlotStateTests.swift -o "$BUILD/SlotStateTests"
 "$BUILD/SlotStateTests"
-echo "Creating app assets…"
-swiftc "${SWIFT_FLAGS[@]}" Resources/make-assets.swift -o "$BUILD/make-assets"
+echo 'Creating app assets...'
+"$SWIFT_COMPILER" "${SWIFT_FLAGS[@]}" Resources/make-assets.swift -o "$BUILD/make-assets"
 "$BUILD/make-assets" "$BUILD"
 iconutil -c icns "$BUILD/AppIcon.iconset" -o "$BUILD/AppIcon.icns"
+# Rebuild the bundle so no stale resources or signatures survive an update.
+rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BUILD/AppIcon.icns" "$BUILD/completion.wav" "$APP/Contents/Resources/"
 cat > "$APP/Contents/Info.plist" <<PLIST
@@ -35,24 +47,26 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <key>NSHumanReadableCopyright</key><string>Focus Slots — a simple personal focus timer.</string>
 </dict></plist>
 PLIST
-for ARCH in x86_64 arm64; do
-    echo "Building $ARCH…"
-    swiftc -O "${SWIFT_FLAGS[@]}" -target "$ARCH-apple-macosx13.0" \
+SLICES=()
+for ARCH in "${ARCHS[@]}"; do
+    case "$ARCH" in x86_64|arm64) ;; *) echo "Unsupported architecture: ${ARCH}" >&2; exit 1 ;; esac
+    echo "Building ${ARCH}..."
+    "$SWIFT_COMPILER" -O "${SWIFT_FLAGS[@]}" -target "${ARCH}-apple-macosx13.0" \
         Sources/SlotState.swift Sources/CompletionSound.swift Sources/FocusSlots.swift "$BUILD/AppVersion.swift" \
-        -o "$BUILD/FocusSlots-$ARCH" -framework AppKit -framework SwiftUI -framework AVFoundation
+        -o "$BUILD/FocusSlots-${ARCH}" -framework AppKit -framework SwiftUI -framework AVFoundation
+    SLICES+=("$BUILD/FocusSlots-${ARCH}")
 done
-lipo -create "$BUILD/FocusSlots-x86_64" "$BUILD/FocusSlots-arm64" -output "$APP/Contents/MacOS/FocusSlots"
+if [ "${#SLICES[@]}" -eq 1 ]; then
+    cp "${SLICES[0]}" "$APP/Contents/MacOS/FocusSlots"
+else
+    lipo -create "${SLICES[@]}" -output "$APP/Contents/MacOS/FocusSlots"
+fi
+# Some lipo versions accept only one architecture per verification call.
+for ARCH in "${ARCHS[@]}"; do
+    lipo "$APP/Contents/MacOS/FocusSlots" -verify_arch "$ARCH"
+done
 codesign --force --sign - --timestamp=none "$APP"
 codesign --verify --deep --strict "$APP"
 plutil -lint "$APP/Contents/Info.plist"
-echo "Creating drag-to-Applications disk image…"
-DMG_ROOT="$(mktemp -d "$BUILD/dmg-root.XXXXXX")"
-chmod 755 "$DMG_ROOT"
-trap 'rm -rf "$DMG_ROOT"' EXIT
-ditto "$APP" "$DMG_ROOT/Focus Slots.app"
-ln -s /Applications "$DMG_ROOT/Applications"
-DMG="$TASK_ROOT/dist/FocusSlots-$APP_VERSION.dmg"
-hdiutil create -volname "Focus Slots" -srcfolder "$DMG_ROOT" \
-    -fs HFS+ -format UDZO -ov "$DMG"
-bash Tests/DMGTests.sh "$DMG" "$APP_VERSION"
-echo "Built: $DMG"
+echo "Built: $APP"
+echo 'To install and launch: bash install.sh'

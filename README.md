@@ -16,7 +16,7 @@ Settings includes the daily target, slot length, sound preview and volume, and t
 
 | Settings | History |
 | --- | --- |
-| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.10" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
+| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
 
 ## How it works
 
@@ -34,8 +34,8 @@ History begins with the saved day available when upgrading to 1.0.7 and continue
 ## Requirements
 
 - macOS 13 or newer to run the app.
-- A Mac with Apple's Command Line Tools and Swift 6 or newer to build. Tested with Swift 6.0.3 and the macOS 15.2 SDK.
-- No third-party packages or paid Apple developer account are needed for a local build.
+- Apple's Command Line Tools and Swift 6 or newer to build. No third-party packages or paid Apple developer account are needed for a local build.
+- Builds and native tests have been verified with Swift 6.0.3 and the macOS 15.2 SDK on macOS 15. The SDK fallback and installer failure cases also have isolated script tests. The macOS 27 Command Line Tools environment reported in [issue #1](https://github.com/ruslansavenok/focus-slots/issues/1) is not available on this development Mac.
 
 Install the Command Line Tools if needed:
 
@@ -43,7 +43,7 @@ Install the Command Line Tools if needed:
 xcode-select --install
 ```
 
-## Build
+## Install or update from source
 
 Clone the project into a new folder:
 
@@ -52,56 +52,65 @@ mkdir -p ~/Projects
 cd ~/Projects
 git clone https://github.com/ruslansavenok/focus-slots.git FocusSlots
 cd FocusSlots
+bash install.sh
 ```
 
-From the project folder, run:
+The script builds and verifies the app for your Mac's architecture, stops your running Focus Slots copy, replaces **~/Applications/Focus Slots.app**, and opens the new copy. It stages and verifies the replacement before stopping the old app and restores the previous copy if replacing it fails. It does not require administrator access. There is no PKG or DMG packaging.
+
+For later updates, run from the project folder:
+
+```bash
+git pull --ff-only
+bash install.sh
+```
+
+Look for your saved count in the menu bar; there is no Dock icon. Open Settings to confirm **Version 1.0.11**, and use **Test sound** to check the chime. If you have a copy in `/Applications` or under the former **Time Slots** name, quit it before updating and remove that old app bundle afterward to avoid launching an outdated copy. Removing the app bundle does not remove your saved settings or history.
+
+The default install folder is `~/Applications`. To choose a different folder, including `/Applications` on a Mac where you have write permission and policy allows it:
+
+```bash
+INSTALL_DIR=/Applications bash install.sh
+```
+
+Paths with spaces are supported. Avoid using `sudo`; use a folder your account can write to. To uninstall, quit the app and move **Focus Slots.app** from your chosen Applications folder to Trash.
+
+An update preserves saved progress, a running timer, settings, and history through the original bundle identity and preference keys. Version 1.0.4 set completion sound volume to 100% once on first launch, including upgrades. Later volume adjustments are saved normally. Sound follows your Mac's selected output, volume, and mute setting.
+
+### Managed Macs and signing
+
+The app is built locally with an ad-hoc signature; Developer ID signing and Apple notarization are not configured. The reporter in issue #1 could run the app from `~/Applications`, while copies in `/Applications` were killed by their managed Mac. The default install location follows that working setup. Other organisations may enforce different policies: the script does not bypass Gatekeeper or endpoint security. If a locally built app is blocked, ask your administrator about an approved location or signing requirement. A successful `open` command submits a launch request; it cannot guarantee endpoint software will allow the app to keep running.
+
+## Build without installing
 
 ```bash
 bash build.sh
-```
-
-The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a compressed drag-to-Applications disk image. It then mounts the image and checks the copied app, its signature, version, and both CPU architectures.
-
-For version 1.0.10, the outputs are:
-
-- App: `build/Focus Slots.app`
-- Disk image: `dist/FocusSlots-1.0.10.dmg`
-
-To try the app without installing it:
-
-```bash
 open "build/Focus Slots.app"
 ```
 
-Quit any already-running copy before opening another build. Build files and disk images are generated locally and excluded from Git.
+The build tests timer logic, generates the icon and sound, compiles only the host architecture (`arm64` or `x86_64`), and verifies the executable architecture, bundle metadata, and ad-hoc signature. The app is **build/Focus Slots.app**. Build files are generated locally and excluded from Git. Quit any already-running copy before opening a different build.
 
-## Install or update
+To build both Intel and Apple Silicon slices explicitly:
 
-1. If Focus Slots (or the previous Time Slots app) is running, click its menu bar count and choose **Quit**.
-2. Open the disk image:
+```bash
+bash build.sh --universal
+# Or build both slices, install, and launch:
+bash install.sh --universal
+```
 
-   ```bash
-   open dist/FocusSlots-1.0.10.dmg
-   ```
+Universal builds depend on the selected Apple toolchain supporting both architectures. Some Apple Silicon Command Line Tools releases lack Intel compatibility libraries and can emit linker warnings for the Intel slice; native builds avoid that cross-architecture dependency. Each architecture is verified with a separate `lipo -verify_arch` call for compatibility with newer tools.
 
-3. Drag **Focus Slots.app** onto the **Applications** shortcut in the mounted image. When updating an existing copy, choose **Replace**.
-4. Eject the **Focus Slots** disk image, then launch **Focus Slots** from Applications or Spotlight:
+### SDK selection with Command Line Tools
 
-   ```bash
-   open "/Applications/Focus Slots.app"
-   ```
+The build first typechecks a small SwiftUI `@State` view against the default macOS SDK. If that fails, it tries other SDKs installed alongside it, newest first, and uses the newest compatible one. This handles the macOS 27 SDK requiring a `SwiftUIMacros` compiler plugin that some Command Line Tools installations do not include, when a compatible older SDK is also installed.
 
-5. Look for **0/4** (or your saved progress) in the menu bar. There is no Dock icon. Open Settings to confirm the running version and use **Test sound** to check the chime.
+To select an installed SDK explicitly, set `SDKROOT` to its full path:
 
-The DMG installs by copying the app. It does not run an installer package or installation scripts. Your Mac or organisation may still require permission to write to Applications or run the app.
+```bash
+SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk bash install.sh
+# The same override is supported by build.sh and test-ui.sh.
+```
 
-If upgrading from the old **Time Slots** name, quit it and move **Time Slots.app** from Applications to Trash before copying **Focus Slots.app**. The app retains the original internal identity and preference keys, so removing the old app bundle does not erase saved progress, settings, or history.
-
-An update replaces the app while keeping its saved progress, timer, and settings. Reopen it after updating so the new code runs. Version 1.0.4 sets completion sound volume to 100% once on first launch, including upgrades. Later volume adjustments are saved normally. Sound follows your Mac's selected output, volume, and mute setting.
-
-The build uses an ad-hoc app signature. Developer ID signing and Apple notarization for distributing prebuilt apps are not configured; the instructions above build the app locally on your Mac.
-
-To uninstall, quit the app and move **Focus Slots** from Applications to Trash.
+An explicit override is checked and is never silently replaced. If no installed SDK passes the check, the build prints the compiler diagnostic and stops before changing an installed app. Install/select a compatible SDK or full Xcode with the required plugin. The selected SDK is printed on each build; probe diagnostics are saved in `build/`.
 
 ## Tests and screenshot generation
 
@@ -109,9 +118,12 @@ After building, run the native integration checks in your Mac's logged-in deskto
 
 ```bash
 bash test-ui.sh
+bash Tests/ScriptTests.sh
 ```
 
 These checks exercise saved settings and progress, start/stop, live completion, real audio playback, sound preview, and volume persistence. The suite uses isolated preferences, briefly plays the chime twice, and renders Start and Stop in light and dark mode, plus Settings and History screenshots into `build/`.
+
+The script tests simulate missing/present SwiftUI macro plugins, SDK selection and explicit overrides. They use a disposable app copy and mocked process/launch commands to check installation, replacement, rollback, and failure handling without stopping or launching your app. Run them after `build.sh`; the scripts support macOS's built-in Bash 3.2.
 
 The README screenshots live separately in `screenshots/`. Refresh them after reviewing the rendered images:
 
@@ -130,12 +142,13 @@ cp build/popover-history.png screenshots/history.png
 | --- | --- |
 | `Sources/` | Timer state, audio playback, menu bar app, and Settings UI |
 | `Resources/make-assets.swift` | Generates the icon and completion chime locally |
-| `Tests/` | Timer behavior, DMG copy-install verification, and native integration checks |
+| `Tests/` | Timer behavior, build/install script checks, and native integration checks |
 | `screenshots/` | Screenshots displayed in this README |
-| `build.sh` | Builds, signs, and checks the app, then creates and verifies the DMG |
+| `build.sh` | Builds, signs, and verifies the native app; optional universal build |
+| `install.sh` | Builds, replaces the app in `~/Applications` by default, and opens it |
 | `test-ui.sh` | Runs native checks and renders screenshots |
-| `Tests/DMGTests.sh` | Mounts the DMG and verifies a copy of its app |
+| `Tests/ScriptTests.sh` | Checks SDK compatibility handling and installation in isolated fixtures |
 | `version.sh` | Defines the release version and internal build number |
-| `toolchain.sh` | Configures the SDK and project-local compiler cache |
+| `toolchain.sh` | Probes SDK compatibility and configures the compiler cache |
 
 Some Command Line Tools installations contain duplicate SwiftBridging headers. The build handles this with a project-local virtual filesystem overlay, without changing the installed Apple tools.

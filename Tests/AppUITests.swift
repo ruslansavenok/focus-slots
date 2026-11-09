@@ -81,7 +81,17 @@ enum AppUITests {
 
         let bell = NSSound(contentsOfFile: output + "/completion.wav", byReference: false)
         assert(bell != nil && abs(bell!.duration - 0.8) < 0.01, "Bundled completion sound is invalid")
-        for (name, appearance, settings, history) in [("light", NSAppearance.Name.aqua, false, false), ("dark", .darkAqua, false, false), ("settings", .aqua, true, false), ("history", .aqua, false, true), ("history-dark", .darkAqua, false, true)] {
+        for (name, appearance, settings, history, running) in [
+            ("light", NSAppearance.Name.aqua, false, false, false),
+            ("dark", .darkAqua, false, false, false),
+            ("running-light", .aqua, false, false, true),
+            ("running-dark", .darkAqua, false, false, true),
+            ("settings", .aqua, true, false, false),
+            ("history", .aqua, false, true, false),
+            ("history-dark", .darkAqua, false, true, false)
+        ] {
+            if running { completed.start() }
+            else if completed.isRunning { completed.stop() }
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 324, height: 350),
                                   styleMask: [.borderless], backing: .buffered, defer: false)
             window.appearance = NSAppearance(named: appearance)
@@ -103,6 +113,6 @@ enum AppUITests {
             try data.write(to: URL(fileURLWithPath: output).appendingPathComponent("popover-\(name).png"))
             window.orderOut(nil)
         }
-        print("PASS: completion invokes real audio once, playback finishes, preview plays without counting, volume persists, stop is silent, unlimited extra slots, next timer reset, persisted history, light/dark/settings/history UI")
+        print("PASS: completion invokes real audio once, playback finishes, preview plays without counting, volume persists, stop is silent, unlimited extra slots, next timer reset, persisted history, Start/Stop light/dark snapshots, settings/history UI")
     }
 }

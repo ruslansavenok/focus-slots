@@ -129,6 +129,21 @@ final class SlotStore: ObservableObject {
     }
 }
 
+// Draw the timer action explicitly rather than relying on the prominent
+// system button's tint/label treatment, which differs between macOS versions.
+private struct TimerActionButtonStyle: ButtonStyle {
+    let fill: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(Color.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .background(fill.opacity(configuration.isPressed ? 0.85 : 1), in: RoundedRectangle(cornerRadius: 9))
+            .contentShape(RoundedRectangle(cornerRadius: 9))
+    }
+}
+
 struct SlotPopover: View {
     @ObservedObject var store: SlotStore
     @State private var settings = false
@@ -271,13 +286,16 @@ struct SlotPopover: View {
                             onStart()
                         }
                     } label: {
-                        Label(store.isRunning ? "Stop" : "Start", systemImage: store.isRunning ? "stop.fill" : "play.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .frame(maxWidth: .infinity).padding(.vertical, 9)
+                        HStack(spacing: 8) {
+                            Image(systemName: store.isRunning ? "stop.fill" : "play.fill")
+                                .symbolRenderingMode(.monochrome)
+                            Text(store.isRunning ? "Stop" : "Start")
+                        }
+                        .font(.system(size: 14, weight: .semibold))
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(store.isRunning ? Color.secondary : accent)
-                    .controlSize(.large)
+                    .buttonStyle(TimerActionButtonStyle(fill: store.isRunning
+                        ? Color(red: 0.30, green: 0.32, blue: 0.36) : accent))
+                    .accessibilityLabel(store.isRunning ? "Stop" : "Start")
                     .help(store.isRunning ? "Discard this unfinished slot" : "Start a new focus slot")
                 }
             }

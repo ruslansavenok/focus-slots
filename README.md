@@ -8,11 +8,15 @@ A simple native macOS menu bar app for manually started focus sessions. Set a da
 | --- | --- |
 | <img src="screenshots/timer-light.png" alt="Focus Slots timer in light appearance" width="300"> | <img src="screenshots/timer-dark.png" alt="Focus Slots timer in dark appearance" width="300"> |
 
+| Running timer — light | Running timer — dark |
+| --- | --- |
+| <img src="screenshots/running-light.png" alt="Running timer with visible Stop text and icon in light mode" width="300"> | <img src="screenshots/running-dark.png" alt="Running timer with visible Stop text and icon in dark mode" width="300"> |
+
 Settings includes the daily target, slot length, sound preview and volume, and the running version.
 
 | Settings | History |
 | --- | --- |
-| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.9" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
+| <img src="screenshots/settings.png" alt="Focus Slots settings with sound controls and version 1.0.10" width="300"> | <img src="screenshots/history.png" alt="Daily history with dates and completed slots over daily targets" width="300"> |
 
 ## How it works
 
@@ -58,10 +62,10 @@ bash build.sh
 
 The build tests the timer logic, generates the icon and sound, compiles both Intel and Apple Silicon binaries, combines them into a universal app, verifies its ad-hoc signature, and creates a compressed drag-to-Applications disk image. It then mounts the image and checks the copied app, its signature, version, and both CPU architectures.
 
-For version 1.0.9, the outputs are:
+For version 1.0.10, the outputs are:
 
 - App: `build/Focus Slots.app`
-- Disk image: `dist/FocusSlots-1.0.9.dmg`
+- Disk image: `dist/FocusSlots-1.0.10.dmg`
 
 To try the app without installing it:
 
@@ -77,7 +81,7 @@ Quit any already-running copy before opening another build. Build files and disk
 2. Open the disk image:
 
    ```bash
-   open dist/FocusSlots-1.0.9.dmg
+   open dist/FocusSlots-1.0.10.dmg
    ```
 
 3. Drag **Focus Slots.app** onto the **Applications** shortcut in the mounted image. When updating an existing copy, choose **Replace**.
@@ -107,13 +111,15 @@ After building, run the native integration checks in your Mac's logged-in deskto
 bash test-ui.sh
 ```
 
-These checks exercise saved settings and progress, start/stop, live completion, real audio playback, sound preview, and volume persistence. The suite uses isolated preferences, briefly plays the chime twice, and renders light, dark, Settings, and History screenshots into `build/`.
+These checks exercise saved settings and progress, start/stop, live completion, real audio playback, sound preview, and volume persistence. The suite uses isolated preferences, briefly plays the chime twice, and renders Start and Stop in light and dark mode, plus Settings and History screenshots into `build/`.
 
 The README screenshots live separately in `screenshots/`. Refresh them after reviewing the rendered images:
 
 ```bash
 cp build/popover-light.png screenshots/timer-light.png
 cp build/popover-dark.png screenshots/timer-dark.png
+cp build/popover-running-light.png screenshots/running-light.png
+cp build/popover-running-dark.png screenshots/running-dark.png
 cp build/popover-settings.png screenshots/settings.png
 cp build/popover-history.png screenshots/history.png
 ```
